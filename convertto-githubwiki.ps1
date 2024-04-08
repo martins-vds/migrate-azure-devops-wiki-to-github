@@ -93,7 +93,7 @@ function MigrateWikiPages ([string] $path, [string] $prefix = "1", [string] $out
         $pageFile = "$pagePath.md"
         $pageContent = MigratePage $pageFile
 
-        $newPrefix = "$($prefix).$($i)"
+        $newPrefix = "$($prefix).$($i+1)"
         $newPage = Join-Path $outputPath "$newPrefix $page.md"
 
         New-Item -ItemType File -Path $newPage -Force | Out-Null
