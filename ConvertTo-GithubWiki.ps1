@@ -32,6 +32,8 @@ param (
 
 $ErrorActionPreference = 'Stop'
 
+. $PSScriptRoot\Markdown.ps1
+
 function GetTempLogFile {
     $tempFile = [System.IO.FileInfo]([System.IO.Path]::GetTempFileName())
     $logFile = Join-Path $tempFile.DirectoryName "$($tempFile.Name).log"
@@ -117,6 +119,10 @@ function MigrateImage ([string] $line) {
     return $line -replace '!\[([^\]]*)\]\(([^\)]*)\)', '![$1](./$2)'
 }
 
+function SanitizePageName ([string] $pageName) {
+    return $([uri]::UnescapeDataString($pageName)) -replace '[\/:*?"<>|]', ''
+}
+
 function MigrateWikiPages ([string] $path, [string] $prefix = "", [string] $outputPath = ".") {
     $pages = ReadPages $path
 
@@ -128,11 +134,14 @@ function MigrateWikiPages ([string] $path, [string] $prefix = "", [string] $outp
         $pageContent = MigratePage $pageFile
 
         $newPrefix = "$($prefix)$($i+1)"
-        $newPage = Join-Path $outputPath "$newPrefix $page.md"
+        $newPageFile = "$newPrefix-$(SanitizePageName $page).md"
+        $newPagePath = Join-Path $outputPath $newPageFile
 
-        New-Item -ItemType File -Path $newPage -Force | Out-Null
-        Set-Content $newPage $pageContent
+        New-Item -ItemType File -Path $newPagePath -Force | Out-Null
+        Set-Content $newPagePath $pageContent
         
+        Fix-Formatting -MarkdownFile $newPagePath -Overwrite
+
         if (Test-Path $pagePath -PathType Container) {
             MigrateWikiPages $pagePath "$($newPrefix)." $outputPath
         }
@@ -145,11 +154,10 @@ function CopyAttachmentFiles ([string] $sourcePath, [string] $destinationPath) {
 }
 
 function AppendToTableOfContents ([string[]] $toc, [string] $page) {
-    $prefix = $page -replace "([^\s]+)\s(.*)\.md", '$1'
-    $title = $page -replace "([^\s]+)\s(.*)\.md", '$1 $2'
-    $link = $title -replace " ", "-"
-
-    $prefixNoDot = $prefix -replace "\.", ""
+    $prefixNoDot = $page -replace "([^-]+)-.*\.md", '$1' -replace "\.", ""
+    $link = $page -replace "(.*)\.md", '$1'
+    $title = $link -replace "---", " - "
+    
     $spaces = "  " * ($prefixNoDot.Length - 1)
     $toc += "$spaces- [$title]($link)"
 
