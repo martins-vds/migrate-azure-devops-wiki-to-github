@@ -99,10 +99,7 @@ function MigrateWikiPages ([string] $path, [string] $prefix = "", [string] $outp
         New-Item -ItemType File -Path $newPage -Force | Out-Null
         Set-Content $newPage $pageContent
         
-        Write-Host "Migrated $pageFile to $newPage"
-
         if (Test-Path $pagePath -PathType Container) {
-            Write-Host "Traversing $pagePath"
             MigrateWikiPages $pagePath "$($newPrefix)." $outputPath
         }
     }
@@ -146,9 +143,15 @@ function CreateHomePage ([string] $path) {
     Out-File -FilePath $homePage -InputObject $toc -Encoding utf8
 }
 
-$temp = CreateTempDirectory
+function Cleanup ([string] $path) {
+    if (Test-Path $path) {
+        Remove-Item $path -Recurse -Force | Out-Null
+    }
+}
 
 try {
+    $temp = CreateTempDirectory
+
     $devopsWiki = Join-Path $temp "devops-wiki"
     $githubWiki = Join-Path $temp "github-wiki"
 
@@ -168,5 +171,7 @@ try {
 } 
 finally {
     Write-Host "Cleaning up temporary directory $temp"
-    Remove-Item $temp -Recurse -Force | Out-Null
+    Cleanup $temp
 }
+
+Write-Host "Done!"
