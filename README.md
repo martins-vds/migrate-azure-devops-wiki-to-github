@@ -20,5 +20,5 @@ Before running the script, make sure you have the following:
 6. Run the following command:
 
     ```powershell
-    .\ConvertTo-GithubWiki.ps1 -AzureDevOpsWikiRepositoryUrl "<Azure DevOps Wiki Repository URL>" -GitHubRepositoryUrl "<GitHub Repository URL>"
+    .\ConvertTo-GithubWiki.ps1 -AzureDevOpsWikiRepositoryUrl "<Azure DevOps Wiki Repository URL>" -GitHubWikiRepositoryUrl "<GitHub Repository URL>"
     ```

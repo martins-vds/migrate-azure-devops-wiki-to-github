@@ -32,14 +32,26 @@ param (
 
 $ErrorActionPreference = 'Stop'
 
+function GetTempLogFile {
+    $tempFile = [System.IO.FileInfo]([System.IO.Path]::GetTempFileName())
+    $logFile = Join-Path $tempFile.DirectoryName "$($tempFile.Name).log"
+    Move-Item $tempFile $logFile -Force | Out-Null
+
+    return $logFile
+}
+
 function Exec {
     param (
         [scriptblock]$ScriptBlock,
         [int[]] $SuccessCodes = @(0)
     )
-    & @ScriptBlock | Out-Null
+    
+    $logFile = GetTempLogFile
+
+    & @ScriptBlock *> $logFile
+
     if ($lastexitcode -notin $SuccessCodes) {
-        throw "Script block '$($ScriptBlock.ToString().Trim().Substring(0, 10))...' failed with code $($lastexitcode)"
+        throw "Script block '$($ScriptBlock.ToString().Trim().Substring(0, 10))...' failed with code $($lastexitcode). See log file '$logFile' for details."
     }
 }
 
@@ -192,7 +204,7 @@ try {
     PushToRepository $GitHubWikiRepositoryUrl $githubWiki
 } 
 finally {
-    Write-Host "Cleaning up temporary directory $temp"
+    Write-Host "Cleaning up..."
     Cleanup $temp
 }
 
