@@ -1,3 +1,25 @@
+<#
+.SYNOPSIS
+Converts an Azure DevOps Wiki to GitHub Wiki format.
+
+.DESCRIPTION
+This script clones an Azure DevOps Wiki repository and a GitHub Wiki repository, migrates the wiki pages from Azure DevOps format to GitHub format, and pushes the changes to the GitHub repository.
+
+.PARAMETER AzureDevOpsWikiRepositoryUrl
+The URL of the Azure DevOps Wiki repository to migrate.
+
+.PARAMETER GitHubWikiRepositoryUrl
+The URL of the GitHub Wiki repository to push the migrated pages to.
+
+.EXAMPLE
+ConvertTo-GitHubWiki -AzureDevOpsWikiRepositoryUrl "https://dev.azure.com/organization/project/_git/wiki" -GitHubWikiRepositoryUrl "https://github.com/organization/project.wiki.git"
+
+.NOTES
+Author: Vinny Martins
+Date: 2024-04-09
+Version: 1.0
+#>
+
 [CmdletBinding()]
 param (
     [Parameter(Mandatory = $true)]
