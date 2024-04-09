@@ -83,7 +83,7 @@ function MigrateImage ([string] $line) {
     return $line -replace '!\[([^\]]*)\]\(([^\)]*)\)', '![$1](./$2)'
 }
 
-function MigrateWikiPages ([string] $path, [string] $prefix = "1", [string] $outputPath = ".") {
+function MigrateWikiPages ([string] $path, [string] $prefix = "", [string] $outputPath = ".") {
     $pages = ReadPages $path
 
     for ($i = 0; $i -lt $pages.Count; $i++) {
@@ -93,7 +93,7 @@ function MigrateWikiPages ([string] $path, [string] $prefix = "1", [string] $out
         $pageFile = "$pagePath.md"
         $pageContent = MigratePage $pageFile
 
-        $newPrefix = "$($prefix).$($i+1)"
+        $newPrefix = "$($prefix)$($i+1)"
         $newPage = Join-Path $outputPath "$newPrefix $page.md"
 
         New-Item -ItemType File -Path $newPage -Force | Out-Null
@@ -103,7 +103,7 @@ function MigrateWikiPages ([string] $path, [string] $prefix = "1", [string] $out
 
         if (Test-Path $pagePath -PathType Container) {
             Write-Host "Traversing $pagePath"
-            MigrateWikiPages $pagePath $newPrefix $outputPath
+            MigrateWikiPages $pagePath "$($newPrefix)." $outputPath
         }
     }
 }
@@ -116,10 +116,11 @@ function CopyAttachmentFiles ([string] $sourcePath, [string] $destinationPath) {
 function AppendToTableOfContents ([string[]] $toc, [string] $page) {
     $prefix = $page -replace "([^\s]+)\s(.*)\.md", '$1'
     $title = $page -replace "([^\s]+)\s(.*)\.md", '$1 $2'
-    
+    $link = $title -replace " ", "-"
+
     $prefixNoDot = $prefix -replace "\.", ""
     $spaces = "  " * ($prefixNoDot.Length - 1)
-    $toc += "$spaces- $title"
+    $toc += "$spaces- [$title]($link)"
 
     return $toc
 }
