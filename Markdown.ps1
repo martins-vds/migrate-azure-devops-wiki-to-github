@@ -1,42 +1,43 @@
 $script:currentSection = $null
 $script:lastNumber = 0
 $script:spacesToRemove = ""
+$script:previousLine = ""
 
 $sections = @{
-    Code            = @{
+    Code       = @{
         Start   = '^(\s*)```.+'
         End     = '^(\s*)```$'
         Process = "ProcessCodeSection"
     }
-    Image           = @{
+    Image      = @{
         Start   = '^(\s*)!\[.*\]\(.*\)$'
         End     = '^(?!(\s*)!\[.*\]\(.*\))$'
         Process = "ProcessImageSection"
     }
-    Note            = @{
+    Note       = @{
         Start   = '^(\s*)\>.*$'
         End     = '^(?!(\s*)\>.*)$'
         Process = "ProcessNoteSection"
     }
-    ListNumber      = @{
+    ListNumber = @{
         Start   = '^\d+\.'
         End     = '^(?!^\d+\.)'
         Process = "ProcessListNumberIncrementSection"
     }
-    ListNumberReset = @{
-        Start   = '^#'
-        End     = '^(?!^#)'
-        Process = "ProcessListNumberIncrementSection"
-    }
-    Paragraph       = @{
+    Paragraph  = @{
         Start   = '^(\s*)\w'
         End     = '^(?!(\s*)\w)'
         Process = "ProcessParagraphSection"
     }
-    Header          = @{
+    Header     = @{
         Start   = '^(\s*)#'
         End     = '^(?!(\s*)#)'
         Process = "ProcessHeaderSection"
+    }
+    Html       = @{
+        Start   = "((ht|f)tp(s?)\:\/\/[0-9a-zA-Z]([-.\w]*[0-9a-zA-Z])*(:(0-9)*)*(\/?)([a-zA-Z0-9\-\.\?\,\'\/\\\+&%\$#_]*)?)"
+        End     = "^(?!((ht|f)tp(s?)\:\/\/[0-9a-zA-Z]([-.\w]*[0-9a-zA-Z])*(:(0-9)*)*(\/?)([a-zA-Z0-9\-\.\?\,\'\/\\\+&%\$#_]*)?))"
+        Process = "ProcessHtmlSection"
     }
 }
 
@@ -78,10 +79,6 @@ function ProcessListNumberIncrementSection([string] $line) {
         $script:lastNumber++
         $line -replace '^\d+', $script:lastNumber
     }
-    elseif ($line -match '^#') {
-        $script:lastNumber = 0
-        $line
-    }
     else {
         $line
     }
@@ -99,8 +96,22 @@ function ProcessParagraphSection([string] $line) {
 
 function ProcessHeaderSection([string] $line) {
     if ($line -match '^(\s*)#') {
+        $script:lastNumber = 0
         $script:spacesToRemove = $matches[1]
-        $line -replace "^$script:spacesToRemove", '' -replace "^(#+)\s*(.*)$", '$1 $2\n'
+        $line -replace "^$script:spacesToRemove", '' -replace "^(#+)\s*(.*)$", "`$1 `$2"
+    }
+    elseif ($line -match "^\w") {
+        "`n$line"
+    }
+    else {
+        $line
+    }
+}
+
+function ProcessHtmlSection([string] $line) {
+    if ($line -match "((ht|f)tp(s?)\:\/\/[0-9a-zA-Z]([-.\w]*[0-9a-zA-Z])*(:(0-9)*)*(\/?)([a-zA-Z0-9\-\.\?\,\'\/\\\+&%\$#_]*)?)") {
+        
+        $line -replace "$($matches[1])", "<$($matches[1])>"
     }
     else {
         $line
@@ -129,16 +140,13 @@ function Fix-Formatting {
         [switch]
         $Overwrite
     )
-
-    $sectionQueue = New-Object System.Collections.Queue
     
     $markdown = Get-Content $MarkdownFile -Encoding utf8 | ForEach-Object {
-        $line = $_
-    
+        $line = $_        
         if ($null -eq $script:currentSection) {
             $sectionsToProcess = $sections.Keys | Where-Object { $line -match $sections[$_].Start } | Select-Object -First 1
     
-            if ($null -eq $sectionsToProcess) {           
+            if ($null -eq $sectionsToProcess) {
                 $line
             }
             else {
