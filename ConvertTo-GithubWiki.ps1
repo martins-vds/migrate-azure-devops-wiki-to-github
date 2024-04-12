@@ -133,7 +133,8 @@ function MigrateWikiPages ([string] $path, [string] $prefix = "", [string] $outp
         $pageFile = "$pagePath.md"
         $pageContent = MigratePage $pageFile
 
-        $newPrefix = "$($prefix)$($i+1)"
+        $newIndex = $($i + 1).ToString("00")
+        $newPrefix = "$($prefix)$newIndex"
         $newPageFile = "$newPrefix-$(SanitizePageName $page).md"
         $newPagePath = Join-Path $outputPath $newPageFile
 
@@ -158,7 +159,7 @@ function AppendToTableOfContents ([string[]] $toc, [string] $page) {
     $link = $page -replace "(.*)\.md", '$1'
     $title = $link -replace "---", " - "
     
-    $spaces = "  " * ($prefixNoDot.Length - 1)
+    $spaces = " " * ($prefixNoDot.Length - 2)
     $toc += "$spaces- [$title]($link)"
 
     return $toc
