@@ -211,6 +211,7 @@ try {
 
     Write-Host "Pushing changes to GitHub..."
     PushToRepository $GitHubWikiRepositoryUrl $githubWiki
+    Write-Host "Done!"
 }
 catch {
     Write-Error "Failed to convert Azure DevOps Wiki to GitHub Wiki: $_"
@@ -220,4 +221,3 @@ finally {
     Cleanup $temp
 }
 
-Write-Host "Done!"
