@@ -35,8 +35,8 @@ $sections = @{
         Process = "ProcessHeaderSection"
     }
     Html       = @{
-        Start   = "((ht|f)tp(s?)\:\/\/[0-9a-zA-Z]([-.\w]*[0-9a-zA-Z])*(:(0-9)*)*(\/?)([a-zA-Z0-9\-\.\?\,\'\/\\\+&%\$#_]*)?)"
-        End     = "^(?!((ht|f)tp(s?)\:\/\/[0-9a-zA-Z]([-.\w]*[0-9a-zA-Z])*(:(0-9)*)*(\/?)([a-zA-Z0-9\-\.\?\,\'\/\\\+&%\$#_]*)?))"
+        Start   = "(?<!\<\s*)((ht|f)tp(s?)\:\/\/[0-9a-zA-Z]([-.\w]*[0-9a-zA-Z])*(:(0-9)*)*(\/?)([a-zA-Z0-9\-\.\?\,\'\/\\\+&%\$#_=]*)?)(?!\s*/>)"
+        End     = "^(?!(?<!\<\s*)((ht|f)tp(s?)\:\/\/[0-9a-zA-Z]([-.\w]*[0-9a-zA-Z])*(:(0-9)*)*(\/?)([a-zA-Z0-9\-\.\?\,\'\/\\\+&%\$#_=]*)?)(?!\s*/>))"
         Process = "ProcessHtmlSection"
     }
 }
@@ -109,7 +109,7 @@ function ProcessHeaderSection([string] $line) {
 }
 
 function ProcessHtmlSection([string] $line) {
-    if ($line -match "((ht|f)tp(s?)\:\/\/[0-9a-zA-Z]([-.\w]*[0-9a-zA-Z])*(:(0-9)*)*(\/?)([a-zA-Z0-9\-\.\?\,\'\/\\\+&%\$#_]*)?)") {
+    if ($line -match "(?<!\<\s*)((ht|f)tp(s?)\:\/\/[0-9a-zA-Z]([-.\w]*[0-9a-zA-Z])*(:(0-9)*)*(\/?)([a-zA-Z0-9\-\.\?\,\'\/\\\+&%\$#_=]*)?)(?!\s*/>)") {
         
         $line -replace "$($matches[1])", "<$($matches[1])>"
     }
